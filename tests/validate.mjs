@@ -13,7 +13,8 @@ import vm from "node:vm";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sandbox = { window: {} };
 vm.createContext(sandbox);
-for (const f of ["data/sdgs.js", "data/observances.js", "data/issues.js", "data/access.js", "data/chapter.js", "assets/js/i18n.js"]) {
+const langFiles = ["lang/fr.js", "lang/ru.js", "lang/zh.js", "lang/ar.js"];
+for (const f of ["data/sdgs.js", "data/observances.js", "data/issues.js", "data/access.js", "data/chapter.js", "data/explainers.js", "assets/js/i18n.js", ...langFiles]) {
   vm.runInContext(readFileSync(join(root, f), "utf8"), sandbox, { filename: f });
 }
 const CC = sandbox.window.CC;
@@ -78,13 +79,49 @@ for (const key of Object.keys(CC.chapter.localPartners || {})) {
   if (!CC.issues.some((i) => i.id === key)) bad(`data/chapter.js: localPartners key "${key}" isn't an issue id`);
 }
 
-// Translation parity
-const en = Object.keys(CC.strings.en), es = Object.keys(CC.strings.es);
-en.filter((k) => !(k in CC.strings.es)).forEach((k) => bad(`i18n: "${k}" has no Spanish string`));
-es.filter((k) => !(k in CC.strings.en)).forEach((k) => bad(`i18n: "${k}" has no English string`));
-for (const k of en) {
-  const vars = (s) => (s.match(/\{\w+\}/g) || []).sort().join();
-  if (k in CC.strings.es && vars(CC.strings.en[k]) !== vars(CC.strings.es[k])) bad(`i18n: "${k}" placeholders differ between languages`);
+// Explainers (English and Spanish inline)
+const explainerIds = new Set();
+for (const x of CC.explainers) {
+  if (explainerIds.has(x.id)) bad(`explainer "${x.id}": duplicate id`);
+  explainerIds.add(x.id);
+  ["title", "body", "prompt"].forEach((f) => bilingual(x[f], `explainer "${x.id}" ${f}`));
+  if (!/^https:\/\//.test(x.source || "")) bad(`explainer "${x.id}": needs an https source`);
+}
+
+// Translation parity: Spanish inline, other languages in lang/*.js
+const vars = (s) => (String(s).match(/\{\w+\}/g) || []).sort().join();
+const en = Object.keys(CC.strings.en);
+const codes = CC.languages.map((l) => l.code);
+if (codes.join() !== "en,es,fr,ru,zh,ar") bad(`i18n.js: languages should be the six UN languages, found ${codes.join()}`);
+const checkStrings = (code, dict) => {
+  en.filter((k) => !(k in dict)).forEach((k) => bad(`${code}: string "${k}" is missing`));
+  Object.keys(dict).filter((k) => !(k in CC.strings.en)).forEach((k) => bad(`${code}: string "${k}" isn't in English`));
+  en.forEach((k) => { if (k in dict && vars(CC.strings.en[k]) !== vars(dict[k])) bad(`${code}: "${k}" placeholders differ from English`); });
+  Object.entries(dict).forEach(([k, v]) => { if (!String(v).trim()) bad(`${code}: "${k}" is empty`); });
+};
+checkStrings("es", CC.strings.es);
+const filled = (v) => typeof v === "string" && v.trim().length > 0;
+for (const code of ["fr", "ru", "zh", "ar"]) {
+  const pack = (CC.lang || {})[code];
+  if (!pack) { bad(`lang/${code}.js: language pack missing`); continue; }
+  checkStrings(code, pack.strings || {});
+  for (let n = 1; n <= 17; n++) if (!filled((pack.sdgs || {})[n])) bad(`${code}: SDG ${n} name missing`);
+  for (const o of CC.observances) {
+    const tr = (pack.observances || {})[o.id];
+    if (!tr || !filled(tr[0]) || !filled(tr[1])) bad(`${code}: observance "${o.id}" needs [name, idea]`);
+  }
+  for (const iss of CC.issues) {
+    const tr = (pack.issues || {})[iss.id];
+    if (!tr) { bad(`${code}: issue "${iss.id}" missing`); continue; }
+    if (!filled(tr.name) || !filled(tr.un)) bad(`${code}: issue "${iss.id}" needs name and un`);
+    iss.targets.forEach((t) => { if (!filled((tr.targets || {})[t.t])) bad(`${code}: issue "${iss.id}" target ${t.t} missing`); });
+    if (!Array.isArray(tr.prompts) || tr.prompts.length !== iss.prompts.length || !tr.prompts.every(filled)) bad(`${code}: issue "${iss.id}" needs ${iss.prompts.length} prompts`);
+    if (!Array.isArray(tr.partners) || tr.partners.length !== iss.partners.en.length) bad(`${code}: issue "${iss.id}" needs ${iss.partners.en.length} partners`);
+  }
+  const acc = pack.access || {};
+  if (!Array.isArray(acc.groups) || acc.groups.length !== CC.access.length || !acc.groups.every(filled)) bad(`${code}: access needs ${CC.access.length} group names`);
+  for (const id of accessIds) { const tr = (acc.items || {})[id]; if (!tr || !filled(tr[0]) || !filled(tr[1])) bad(`${code}: access item "${id}" needs [label, statement]`); }
+  for (const id of explainerIds) { const tr = (pack.explainers || {})[id]; if (!tr || tr.length !== 3 || !tr.every(filled)) bad(`${code}: explainer "${id}" needs [title, body, prompt]`); }
 }
 
 // Keys used in index.html must exist
@@ -97,4 +134,4 @@ if (problems.length) {
   console.error(`FAIL: ${problems.length} problem(s)\n- ` + problems.join("\n- "));
   process.exit(1);
 }
-console.log(`PASS: ${CC.observances.length} observances, ${CC.issues.length} issues, ${accessIds.size} access items, ${en.length} strings in 2 languages.`);
+console.log(`PASS: ${CC.observances.length} observances, ${CC.issues.length} issues, ${accessIds.size} access items, ${explainerIds.size} explainers, ${en.length} strings in ${codes.length} languages.`);

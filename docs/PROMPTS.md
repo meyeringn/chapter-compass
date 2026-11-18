@@ -24,6 +24,9 @@ This is the prompt the session ran, after the interview:
 >
 > **DELIVER:** The repo, ready to upload to GitHub.
 
+## Extensions (November 2026)
+After launch, the same session added a UN white and blue palette, then three features chosen by the author: all six UN languages (with Arabic right to left), "Learn the UN" explainer cards, and the Co-host view with share links. Each followed the same loop: ask the open questions first (which languages, map or calendar, current events or not), show the plan, build, then verify with the validator, an accessibility script across all 42 language and tab combinations, and screenshots in Arabic, Chinese, Russian, and French.
+
 ## Prompts for extending it
 - *"Read CLAUDE.md and docs/DESIGN.md. Add a 'Membership drive' view that tracks the Plus One campaign. Keep it bilingual, run the validator, and screenshot it at 1280px and 390px."*
 - *"Use a subagent to review index.html and app.js for keyboard traps and missing labels. Report only real barriers."*

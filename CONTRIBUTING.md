@@ -5,12 +5,12 @@ Thanks for helping chapters plan better years. You don't need to be a developer:
 ## Ways to help
 - **Correct a chapter reminder.** UNA-USA deadlines change. If one is out of date, open an issue with a link to the current source.
 - **Add an observance.** Use the [UN list of international days](https://www.un.org/en/observances/list-days-weeks).
-- **Improve the Spanish**, or start a new language.
+- **Review a translation.** All five non-English languages are AI-assisted drafts. A native speaker's review of one file in `lang/` is the most valuable contribution there is. See [docs/LANGUAGES.md](docs/LANGUAGES.md).
 - **Test with assistive technology** and report what breaks.
 - **Add a local issue** that chapters keep asking about.
 
 ## Ground rules
-1. **Both languages, every time.** Every new string needs `en` and `es`. If you don't write Spanish, add your English and mark the Spanish `"TODO"`; a reviewer will help. The check will flag missing keys.
+1. **All six languages, every time.** Every new string needs English, Spanish, and an entry in each `lang/*.js` file. If you can't write a language, copy the English in and open an issue asking for a translation; the check flags missing keys so nothing is forgotten.
 2. **Identity-first language** in our own copy ("Disabled people," "personas Discapacitadas"). Quote official UN titles exactly.
 3. **Cite sources.** Treaty articles, SDG targets, and chapter deadlines all need a link someone can check.
 4. **Stay nonpartisan.** UNA-USA chapters don't endorse candidates or parties, and neither does this tool.

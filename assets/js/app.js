@@ -22,8 +22,41 @@
   };
 
   /* ---------- i18n ---------- */
-  var navLang = (navigator.language || "en").toLowerCase();
-  var lang = store.get("lang", navLang.indexOf("es") === 0 ? "es" : "en");
+  // Merge each language pack from lang/*.js into the shared data, so L() finds every language.
+  function mergeLang(code, pack) {
+    CC.strings[code] = pack.strings || {};
+    CC.sdgs.forEach(function (g) { if (pack.sdgs && pack.sdgs[g.n]) g[code] = pack.sdgs[g.n]; });
+    CC.observances.forEach(function (o) {
+      var tr = pack.observances && pack.observances[o.id];
+      if (tr) { o.name[code] = tr[0]; o.idea[code] = tr[1]; }
+    });
+    CC.issues.forEach(function (iss) {
+      var tr = pack.issues && pack.issues[iss.id];
+      if (!tr) return;
+      iss.name[code] = tr.name; iss.un[code] = tr.un;
+      iss.targets.forEach(function (tg) { if (tr.targets && tr.targets[tg.t]) tg[code] = tr.targets[tg.t]; });
+      iss.prompts.forEach(function (pr, i) { if (tr.prompts && tr.prompts[i]) pr[code] = tr.prompts[i]; });
+      if (tr.partners) iss.partners[code] = tr.partners;
+    });
+    CC.access.forEach(function (g, gi) {
+      if (pack.access && pack.access.groups && pack.access.groups[gi]) g.group[code] = pack.access.groups[gi];
+      g.items.forEach(function (it) {
+        var tr = pack.access && pack.access.items && pack.access.items[it.id];
+        if (tr) { it[code] = tr[0]; it.says[code] = tr[1]; }
+      });
+    });
+    CC.explainers.forEach(function (x) {
+      var tr = pack.explainers && pack.explainers[x.id];
+      if (tr) { x.title[code] = tr[0]; x.body[code] = tr[1]; x.prompt[code] = tr[2]; }
+    });
+  }
+  Object.keys(CC.lang || {}).forEach(function (code) { mergeLang(code, CC.lang[code]); });
+
+  var langCodes = CC.languages.map(function (l) { return l.code; });
+  var navLang = (navigator.language || "en").toLowerCase().slice(0, 2);
+  var lang = store.get("lang", langCodes.indexOf(navLang) !== -1 ? navLang : "en");
+  if (langCodes.indexOf(lang) === -1) lang = "en";
+  function langInfo() { return CC.languages.filter(function (l) { return l.code === lang; })[0]; }
 
   function t(key, vars) {
     var s = (CC.strings[lang] && CC.strings[lang][key]);
@@ -47,10 +80,12 @@
       });
     });
     document.title = t("meta.title");
-    var lt = $("#lang-toggle");
-    lt.textContent = t("lang.switch");
-    lt.setAttribute("lang", lang === "en" ? "es" : "en");
-    lt.setAttribute("aria-label", t("lang.switchLabel"));
+    document.documentElement.dir = langInfo().dir;
+    var sel = $("#lang-select");
+    sel.innerHTML = CC.languages.map(function (l) {
+      return '<option value="' + l.code + '" lang="' + l.code + '" dir="' + l.dir + '"' + (l.code === lang ? " selected" : "") + ">" + esc(l.label) + "</option>";
+    }).join("");
+    sel.setAttribute("aria-label", t("lang.label"));
   }
 
   var statusTimer;
@@ -181,7 +216,7 @@
       if (o.type === "admin") meta = '<span class="tag tag-admin">' + esc(t("obs.reminder")) + "</span>" + meta;
       if (o.signature) meta = '<span class="tag tag-sig">' + esc(t("obs.signature")) + "</span>" + meta;
       return '<li class="obs' + (on ? " is-planned" : "") + (past ? " is-past" : "") + '" id="obs-' + o.id + '" data-type="' + o.type + '" tabindex="-1">' +
-        '<p class="obs-date"><span class="obs-m">' + esc(month) + '</span><span class="obs-d">' + d.getDate() + "</span></p>" +
+        '<p class="obs-date"><span class="obs-m">' + esc(month) + '</span><span class="obs-d">' + esc(fmt(d, { day: "numeric" })) + "</span></p>" +
         '<div class="obs-body">' +
           "<h3>" + esc(L(o.name)) + "</h3>" +
           (o.endMonth ? '<p class="obs-range">' + esc(dateLabel(o)) + "</p>" : "") +
@@ -213,7 +248,8 @@
   }
 
   /* The year dial: the page's signature element. Purely visual; the list is the accessible version. */
-  function renderDial() {
+  function renderDial(target, counts) {
+    target = target || "#dial";
     var size = 640, c = size / 2, rRing = 286, rMark = 236, rLabel = 262;
     var days = daysInYear(planYear);
     function pt(angleDeg, r) {
@@ -259,7 +295,7 @@
     // Route between planned stops.
     var planned = planIds().filter(function (id) { return obsById[id]; }).map(function (id) { return obsById[id]; })
       .sort(function (a, b) { return dateFor(a, planYear) - dateFor(b, planYear); });
-    if (planned.length > 1) {
+    if (planned.length > 1 && !counts) {
       var route = planned.map(function (o, i) {
         var p = pt(angleOf(dateFor(o, planYear)), rMark);
         return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1);
@@ -272,6 +308,15 @@
       var a = angleOf(dateFor(o, planYear));
       var p = pt(a, rMark);
       var on = inPlan(o.id);
+      if (counts) {
+        var n = (counts[o.id] || []).length;
+        var title2 = "<title>" + esc(dateLabel(o) + ": " + L(o.name) + (n ? " (" + t("cohost.chapters", { n: n }) + ")" : "")) + "</title>";
+        if (!n) { out.push('<circle class="mark mark-faint" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4">' + title2 + "</circle>"); return; }
+        var r = Math.min(7 + (n - 1) * 5, 20);
+        out.push('<circle class="mark mark-count' + (n > 1 ? " is-shared" : "") + '" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="' + r + '">' + title2 + "</circle>");
+        if (n > 1) out.push('<text class="mark-n" x="' + p[0].toFixed(1) + '" y="' + p[1].toFixed(1) + '" text-anchor="middle" dominant-baseline="central">' + n + "</text>");
+        return;
+      }
       var cls = "mark mark-" + o.type + (on ? " is-planned" : "");
       var title = "<title>" + esc(dateLabel(o) + ": " + L(o.name)) + "</title>";
       if (o.type === "admin") {
@@ -294,16 +339,24 @@
       var d = dateFor(o, today.getFullYear());
       return d >= new Date(today.getFullYear(), today.getMonth(), today.getDate());
     })[0] || sortedObs()[0];
+    if (counts) {
+      var shared = Object.keys(counts).filter(function (k) { return counts[k].length > 1; }).length;
+      out.push('<div class="dial-readout"><p class="readout-label">' + esc(t("cohost.overlapH")) + "</p>" +
+        '<p class="readout-name readout-big">' + esc(shared.toLocaleString(lang)) + "</p>" +
+        '<p class="readout-date">' + esc(String(planYear)) + "</p></div>");
+      $(target).innerHTML = out.join("");
+      return;
+    }
     var stops = planned.length === 0 ? t("dial.nothing") : planned.length === 1 ? t("dial.stopsOne") : t("dial.stops", { n: planned.length });
     out.push('<div class="dial-readout"><p class="readout-label">' + esc(t("dial.next")) + "</p>" +
       '<p class="readout-name">' + esc(L(next.name)) + "</p>" +
       '<p class="readout-date">' + esc(fmt(dateFor(next, today.getFullYear()), { month: "long", day: "numeric" })) + "</p>" +
       '<p class="readout-stops">' + esc(stops) + "</p></div>");
 
-    $("#dial").innerHTML = out.join("");
+    $(target).innerHTML = out.join("");
   }
 
-  function renderYear() { renderDial(); renderList(); renderPlan(); }
+  function renderYear() { renderDial(); renderList(); renderPlan(); renderShareLink(); renderCohost(); }
 
   function printWith(mode) {
     document.body.setAttribute("data-print", mode);
@@ -592,6 +645,124 @@
   }
 
   /* =====================================================================
+   * LEARN THE UN
+   * ===================================================================== */
+  function renderLearn() {
+    $("#learn-cards").innerHTML = CC.explainers.map(function (x) {
+      return '<article class="card" aria-labelledby="card-' + x.id + '">' +
+        '<h2 id="card-' + x.id + '">' + esc(L(x.title)) + "</h2>" +
+        "<p>" + esc(L(x.body)) + "</p>" +
+        '<div class="card-try"><h3>' + esc(t("learn.try")) + "</h3><p>" + esc(L(x.prompt)) + "</p></div>" +
+        '<p class="card-source"><a href="' + esc(x.source) + '">' + esc(t("learn.source")) + "</a></p>" +
+      "</article>";
+    }).join("");
+  }
+
+  /* =====================================================================
+   * SHARE LINKS AND CO-HOSTING
+   * A shared plan is a link with ?plan=<base64url JSON>: { v, n: chapter, y: year, d: [ids] }.
+   * The plan lives in the link itself, so nothing is stored online.
+   * ===================================================================== */
+  function b64e(str) { return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function b64d(str) { str = str.replace(/-/g, "+").replace(/_/g, "/"); while (str.length % 4) str += "="; return decodeURIComponent(escape(atob(str))); }
+  function shareUrl() {
+    var base = location.href.split("#")[0].split("?")[0];
+    return base + "?plan=" + b64e(JSON.stringify({ v: 1, n: CC.chapter.name, y: planYear, d: planIds() })) + "#cohost";
+  }
+  function parseShare(text) {
+    try {
+      var str = String(text || "").trim();
+      var m = str.match(/[?&]plan=([A-Za-z0-9_-]+)/);
+      var o = JSON.parse(b64d(m ? m[1] : str));
+      if (o.v !== 1 || !Array.isArray(o.d) || typeof o.y !== "number") return null;
+      return { n: String(o.n || "").slice(0, 80) || "?", y: o.y, d: o.d.filter(function (id) { return obsById[id]; }) };
+    } catch (e) { return null; }
+  }
+  function renderShareLink() {
+    var box = $("#share-link");
+    if (box) box.value = planIds().length ? shareUrl() : "";
+  }
+
+  var others = store.get("others", []);
+  var incoming = null;
+
+  function addOther(plan) {
+    others = others.filter(function (o) { return !(o.n === plan.n && o.y === plan.y); });
+    others.push(plan);
+    store.set("others", others);
+    renderCohost();
+    say(t("cohost.added", { name: plan.n }));
+  }
+
+  function cohostCounts() {
+    var counts = {};
+    function add(name, ids) { ids.forEach(function (id) { (counts[id] = counts[id] || []).push(name); }); }
+    add(CC.chapter.name, planIds());
+    others.forEach(function (o) { if (o.y === planYear) add(o.n, o.d); });
+    return counts;
+  }
+
+  function renderCohost() {
+    if (!$("#cohost-dial")) return;
+    var counts = cohostCounts();
+    renderDial("#cohost-dial", counts);
+    $("#cohost-year").textContent = t("cohost.year", { year: planYear });
+
+    function daysText(n) { return n === 1 ? t("cohost.daysOne") : t("cohost.days", { n: n }); }
+    var mine = '<li><strong>' + esc(t("cohost.you", { name: CC.chapter.name })) + "</strong> " + esc(daysText(planIds().length)) + "</li>";
+    $("#chapter-list").innerHTML = mine + others.map(function (o, i) {
+      var note = o.y === planYear ? daysText(o.d.length) : t("cohost.otherYear", { year: o.y });
+      return "<li><strong>" + esc(o.n) + "</strong> " + esc(note) +
+        ' <button type="button" class="linkish" data-other-remove="' + i + '" aria-label="' + esc(t("cohost.removeLabel", { name: o.n })) + '">' + esc(t("cohost.remove")) + "</button></li>";
+    }).join("");
+
+    var shared = Object.keys(counts).filter(function (id) { return counts[id].length > 1; })
+      .sort(function (a, b) { return counts[b].length - counts[a].length || dateFor(obsById[a], planYear) - dateFor(obsById[b], planYear); });
+    $("#overlap-empty").hidden = shared.length > 0;
+    $("#overlap-list").innerHTML = shared.map(function (id) {
+      var o = obsById[id], on = inPlan(id), name = L(o.name);
+      return '<li class="overlap"><p class="overlap-count">' + esc(counts[id].length.toLocaleString(lang)) + "</p>" +
+        '<div><h3>' + esc(name) + '</h3><p class="obs-range">' + esc(dateLabel(o)) + "</p>" +
+        '<p class="fine">' + esc(t("cohost.chapters", { n: counts[id].length }) + ": " + counts[id].join(", ")) + "</p></div>" +
+        '<div class="overlap-actions">' +
+          '<button type="button" class="toggle toggle-small" data-plan="' + id + '" aria-pressed="' + on + '"><span class="toggle-box" aria-hidden="true"></span>' +
+            esc(on ? t("obs.added") : t("obs.add")) + '<span class="visually-hidden">: ' + esc(name) + "</span></button>" +
+          '<button type="button" class="btn btn-small" data-cohost-email="' + id + '" aria-label="' + esc(t("cohost.draftLabel", { name: name })) + '">' + esc(t("cohost.draft")) + "</button>" +
+        "</div></li>";
+    }).join("");
+  }
+
+  function draftCohostEmail(id) {
+    var o = obsById[id];
+    var names = (cohostCounts()[id] || []).filter(function (n) { return n !== CC.chapter.name; });
+    var joined = names.length > 1 ? names.slice(0, -1).join(", ") + " " + t("cohost.and") + " " + names[names.length - 1] : names.join("");
+    $("#cohost-email").value = [
+      t("cohost.emailSubject", { observance: L(o.name) }), "",
+      t("cohost.emailHello", { names: joined }), "",
+      t("cohost.emailBody", { observance: L(o.name), date: fmt(dateFor(o, planYear), { month: "long", day: "numeric" }), year: planYear }), "",
+      t("cohost.emailAsk"), "",
+      t("cohost.emailSign"), CC.chapter.name
+    ].join("\n");
+    $("#cohost-email-wrap").hidden = false;
+    $("#cohost-email").focus();
+    say(t("cohost.emailReady"));
+  }
+
+  function checkIncoming() {
+    var m = location.search.match(/[?&]plan=([A-Za-z0-9_-]+)/);
+    if (!m) return;
+    incoming = parseShare(m[1]);
+    if (!incoming) return;
+    $("#share-banner-text").textContent = t("share.incoming", { name: incoming.n, year: incoming.y, n: incoming.d.length });
+    $("#share-banner").hidden = false;
+  }
+  function clearIncoming() {
+    incoming = null;
+    $("#share-banner").hidden = true;
+    try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) { /* file:// or sandboxed */ }
+  }
+
+  /* =====================================================================
    * TRACK IMPACT
    * ===================================================================== */
   var log = store.get("log", []);
@@ -745,7 +916,7 @@
   /* =====================================================================
    * ROUTING
    * ===================================================================== */
-  var routes = ["year", "event", "issue", "impact", "resources"];
+  var routes = ["year", "event", "issue", "learn", "cohost", "impact", "resources"];
   var current = null;
   function go(route) {
     if (location.hash !== "#" + route) { location.hash = route; return; }
@@ -770,11 +941,34 @@
    * EVENTS
    * ===================================================================== */
   function bind() {
-    $("#lang-toggle").addEventListener("click", function () {
-      lang = lang === "en" ? "es" : "en";
+    $("#lang-select").addEventListener("change", function (e) {
+      lang = e.target.value;
       store.set("lang", lang);
-      draft.ros = draft.ros; // keep the user's run of show; only defaults are language-bound
       renderAll();
+      if (incoming) $("#share-banner-text").textContent = t("share.incoming", { name: incoming.n, year: incoming.y, n: incoming.d.length });
+      $("#lang-select").focus();
+    });
+    $("#learn-print").addEventListener("click", function () { printWith("learn"); });
+    $("#share-copy").addEventListener("click", function () {
+      if (!planIds().length) { say(t("share.emptyPlan")); return; }
+      renderShareLink();
+      var box = $("#share-link");
+      function fallback() { box.focus(); box.select(); say(t("status.copyFail")); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(box.value).then(function () { say(t("share.copied")); }, fallback);
+      else fallback();
+    });
+    $("#share-accept").addEventListener("click", function () {
+      var p = incoming; clearIncoming();
+      if (p) { addOther(p); go("cohost"); }
+    });
+    $("#share-dismiss").addEventListener("click", function () { clearIncoming(); $("#main").focus(); });
+    $("#cohost-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var f = e.target, p = parseShare(f.elements.link.value);
+      var err = $("#cohost-error");
+      if (!p) { err.textContent = t("cohost.bad"); f.elements.link.setAttribute("aria-invalid", "true"); f.elements.link.focus(); return; }
+      err.textContent = ""; f.elements.link.removeAttribute("aria-invalid"); f.reset();
+      addOther(p);
     });
 
     var largePrint = store.get("largePrint", false);
@@ -809,6 +1003,7 @@
         var again = document.querySelector('[data-plan="' + id + '"]');
         if (again && current === "year") again.focus();
         if (current === "issue") { var ib = $('#issue-result [data-plan="' + id + '"]'); if (ib) ib.focus(); }
+        if (current === "cohost") { var cb = $('#overlap-list [data-plan="' + id + '"]'); if (cb) cb.focus(); }
         return;
       }
       var j = e.target.closest("[data-jump]");
@@ -836,6 +1031,14 @@
       if (ie) {
         var iss = CC.issues.filter(function (i) { return i.id === ie.getAttribute("data-issue-event"); })[0];
         startEventFor(iss.days[0], t("issue.titleSuggest", { issue: L(iss.name) }));
+        return;
+      }
+      var ce = e.target.closest("[data-cohost-email]");
+      if (ce) { draftCohostEmail(ce.getAttribute("data-cohost-email")); return; }
+      var orm = e.target.closest("[data-other-remove]");
+      if (orm) {
+        var gone = others.splice(+orm.getAttribute("data-other-remove"), 1)[0];
+        store.set("others", others); renderCohost(); say(t("cohost.removed", { name: gone.n })); $("#cohost-h").focus();
         return;
       }
       var cp = e.target.closest("[data-copy]");
@@ -909,10 +1112,13 @@
     renderIssue();
     renderLogSdgs();
     renderImpact();
+    renderLearn();
+    renderCohost();
   }
 
   renderAll();
   bind();
+  checkIncoming();
   show(location.hash.slice(1) || "year", false);
   // One orchestrated moment: the needle swings to today once the page has painted.
   requestAnimationFrame(function () { requestAnimationFrame(function () { document.documentElement.classList.add("is-ready"); }); });

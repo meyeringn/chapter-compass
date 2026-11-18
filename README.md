@@ -1,6 +1,6 @@
 # 🧭 Chapter Compass — A Year-Round Planning Toolkit for UNA-USA Chapters
 
-**Plot your chapter's year.** A free, open-source, bilingual (English/Spanish) planning toolkit for United Nations Association of the USA chapter leaders. Built Disabled-led and accessibility-first.
+**Plot your chapter's year.** A free, open-source planning toolkit, in all six official UN languages, for United Nations Association of the USA chapter leaders. Built Disabled-led and accessibility-first.
 
 *Data last verified: November 2026*
 
@@ -12,12 +12,16 @@
 
 ## What Is Chapter Compass?
 
-Chapter Compass helps the volunteers who run UNA-USA's chapters do four things that usually live in four different spreadsheets:
+Chapter Compass helps the volunteers who run UNA-USA's chapters do six things that usually live in six different places:
 
 1. **Plan the year** around UN international days and chapter deadlines.
 2. **Plan accessible events** and turn them into a printable brief, an access statement, and posts to share.
 3. **Connect a local issue** (transit, housing, heat, voting access, and more) to the UN's goals, so members see the UN on their own street.
-4. **Track impact** so January's annual report starts with a first draft instead of a blank page.
+4. **Learn the UN** with plain-language cards to read aloud or print.
+5. **Co-host with nearby chapters** by trading plan links and finding the days you share.
+6. **Track impact** so January's annual report starts with a first draft instead of a blank page.
+
+It speaks Arabic, Chinese, English, French, Russian, and Spanish, the UN's six official languages, with a full right-to-left layout for Arabic.
 
 It runs entirely in the browser. No accounts, no server, no API keys, and nothing you type is sent anywhere.
 
@@ -47,13 +51,23 @@ Accessibility is usually an afterthought in event planning. Here it's step 2 of 
 - Eleven issues, each with SDG targets in plain language, one concrete UN connection (a treaty article, a target, a resolution), discussion questions, partner types to invite, and related days to build an event around.
 - Local partner suggestions come from `data/chapter.js`, so every chapter sees its own city.
 
+### Learn the UN
+- Thirteen plain-language cards: what the UN is, the General Assembly, the Security Council, the Secretary-General, ECOSOC, the International Court of Justice, agencies, the SDGs, peacekeeping, human rights treaties, funding, UNA-USA, and why six languages.
+- Each card has a "Try this at a meeting" question and a source link. Print the set for a welcome table.
+- Lasting facts only, so the cards don't go stale.
+
+### Co-host
+- **Copy share link** in Our plan makes a link that carries only your chosen days. Nothing is stored online.
+- Paste other chapters' links to see one dial with every chapter's picks, sized by how many chose each day.
+- A ranked list of shared days, each with a ready-to-send co-hosting email.
+
 ### Track impact
 - Log events, attendance, new members, partners, and goals.
 - Running totals for the year, a CSV download, and a backup/restore file.
 - An **annual report first draft**, generated from your log.
 
 ### Everywhere
-- English and Spanish, switchable at any time.
+- All six UN languages, switchable at any time; Arabic mirrors right to left. See [docs/LANGUAGES.md](docs/LANGUAGES.md).
 - Large print mode, high-contrast palette (AA or better everywhere, most text AAA), full keyboard support, and reduced motion respected.
 
 ## Two Standout Features
@@ -103,16 +117,19 @@ chapter-compass/
 ├── assets/
 │   ├── css/compass.css     # Design system (UN white and blue, chart layout)
 │   ├── js/app.js           # App logic: dial, planner, issues, log, routing
-│   ├── js/i18n.js          # Every interface string, English and Spanish
+│   ├── js/i18n.js          # Interface strings, English and Spanish, and the language list
 │   └── favicon.svg
 ├── data/
 │   ├── observances.js      # UN days and chapter reminders
 │   ├── sdgs.js             # The 17 goals
 │   ├── issues.js           # Local issues mapped to the UN
 │   ├── access.js           # Event access checklist
+│   ├── explainers.js       # "Learn the UN" cards
 │   ├── chapter.js          # ← edit this to make it your chapter's
 │   └── methodology.md
+├── lang/                   # fr.js, ru.js, zh.js, ar.js: one file per language
 ├── docs/
+│   ├── LANGUAGES.md        # Languages, right-to-left, disability terms, reviewing
 │   ├── DESIGN.md           # Design tokens and the reasoning behind them
 │   ├── FORKING.md          # Customizing for your chapter
 │   └── PROMPTS.md          # How this was vibe coded with Claude
@@ -156,7 +173,7 @@ Found a barrier? Please [open an issue](https://github.com/meyeringn/chapter-com
 
 ## Contributing
 
-Contributions are welcome, especially translations, new observances, chapter reminder corrections, and access testing with assistive technology. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome, especially **native-speaker reviews of the five translations** ([docs/LANGUAGES.md](docs/LANGUAGES.md)), new observances, chapter reminder corrections, and access testing with assistive technology. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

@@ -29,7 +29,8 @@ Chapter Compass is built by a Disabled developer for chapters that include Disab
 - **The year dial is visual only** and hidden from screen readers. The list right below it holds the same information and every action.
 
 ### Language
-- Full English and Spanish interface. The page's `lang` attribute updates when you switch, so screen readers use the right voice.
+- All six UN languages: Arabic, Chinese, English, French, Russian, and Spanish. The page's `lang` and `dir` attributes update when you switch, so screen readers use the right voice and Arabic reads right to left. Each language option in the menu is marked with its own `lang`, so screen readers pronounce it correctly.
+- Scripts that Atkinson Hyperlegible doesn't cover get fonts drawn for them (Noto Sans, Noto Sans SC, Noto Sans Arabic).
 - Plain-language copy throughout. Identity-first disability language ("Disabled people") in our own writing. Official UN titles are quoted as the UN publishes them.
 
 ### Print
@@ -46,7 +47,7 @@ It isn't a legal compliance tool. It's a planning list that makes gaps visible e
 
 ## Known limitations
 - Automated checks were run with a custom script (labels, names, headings, IDs, target sizes, keyboard flow). It hasn't been tested yet with every screen reader and browser pair. **Testing with JAWS, NVDA, VoiceOver, and TalkBack is the most valuable contribution you can make.**
-- Spanish copy should be reviewed by native speakers, including Disabled Spanish speakers, for tone and disability terms.
+- All five translations are AI-assisted drafts awaiting native-speaker review, ideally including Disabled speakers of each language. See [docs/LANGUAGES.md](docs/LANGUAGES.md) for the disability terms chosen in each language and why.
 - Data you enter is saved only in your browser. If you clear site data, it's gone, so download a backup.
 
 ## Report a barrier

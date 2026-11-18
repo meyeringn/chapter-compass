@@ -33,6 +33,9 @@ Each issue cites real SDG target numbers, with the target text paraphrased into 
 - General Assembly resolution 64/292 (2010), the human right to water and sanitation
 - SDG targets 4.7, 11.2, 11.7
 
+## Explainers (`explainers.js`)
+Thirteen "Learn the UN" cards built from the UN Charter and the UN's own pages (each card links its source). They cover lasting facts only: membership (193 states), the Security Council's structure (15 members, 5 permanent with veto), terms of office, the SDGs (17 goals, 169 targets, adopted 2015), the ICJ (15 judges, nine-year terms), peacekeeping (first mission 1948), and treaty basics. The CRPD card notes that the United States signed the CRPD in 2009 but has not ratified it (Senate vote of December 2012 fell short of two-thirds; status confirmed November 2026). Officeholders' names, budget figures, and current disputes are left out on purpose.
+
 ## What's deliberately left out
 - **Current events and political status** (funding levels, withdrawals, the Secretary-General selection). They change fast and belong in a chapter's own briefing, not a planning tool's data. For context as of November 2026: the US announced in January 2026 that it would stop participating in or funding 31 UN entities, and the tenth Secretary-General is due to take office in January 2027. Check current sources before citing either.
 - **Official logos and the SDG color wheel.** This is an independent tool.

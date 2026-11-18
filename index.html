@@ -14,7 +14,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <!-- Bunny Fonts: a privacy-friendly Google Fonts mirror (no cookies, no IP logging). Fallback stacks keep the page readable offline. -->
   <link rel="preconnect" href="https://fonts.bunny.net">
-  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=atkinson-hyperlegible-next:400,400i,700|big-shoulders-display:700,800&display=swap">
+  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=atkinson-hyperlegible-next:400,400i,700|big-shoulders-display:700,800|noto-sans:400,700|roboto-condensed:700|noto-sans-sc:400,700|noto-sans-arabic:400,700&display=swap">
   <link rel="stylesheet" href="assets/css/compass.css">
 </head>
 <body>
@@ -34,7 +34,11 @@
         </span>
       </a>
       <div class="settings">
-        <button type="button" class="setting" id="lang-toggle" lang="es">Español</button>
+        <label class="setting setting-select" for="lang-select">
+          <svg class="globe" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 12h19M12 2.5c3 3.2 3 15.8 0 19M12 2.5c-3 3.2-3 15.8 0 19" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span class="visually-hidden" data-i18n="lang.label">Language</span>
+          <select id="lang-select"></select>
+        </label>
         <button type="button" class="setting" id="print-toggle" aria-pressed="false" data-i18n="setting.largePrint">Large print</button>
       </div>
     </div>
@@ -43,6 +47,8 @@
         <li><a href="#year" data-route="year" data-i18n="nav.year">Plan the year</a></li>
         <li><a href="#event" data-route="event" data-i18n="nav.event">Plan an event</a></li>
         <li><a href="#issue" data-route="issue" data-i18n="nav.issue">Connect a local issue</a></li>
+        <li><a href="#learn" data-route="learn" data-i18n="nav.learn">Learn the UN</a></li>
+        <li><a href="#cohost" data-route="cohost" data-i18n="nav.cohost">Co-host</a></li>
         <li><a href="#impact" data-route="impact" data-i18n="nav.impact">Track impact</a></li>
         <li><a href="#resources" data-route="resources" data-i18n="nav.resources">Resources</a></li>
       </ul>
@@ -50,6 +56,13 @@
   </header>
 
   <main id="main" tabindex="-1">
+    <div id="share-banner" class="banner" hidden>
+      <p id="share-banner-text"></p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" id="share-accept" data-i18n="share.accept">Add to Co-host</button>
+        <button type="button" class="btn" id="share-dismiss" data-i18n="share.dismiss">Not now</button>
+      </div>
+    </div>
 
     <!-- ===================== PLAN THE YEAR ===================== -->
     <section id="view-year" class="view" data-view="year" aria-labelledby="year-h">
@@ -105,6 +118,13 @@
             <button type="button" class="btn" id="plan-print" data-i18n="plan.print">Print the plan</button>
           </div>
           <p class="fine" data-i18n="plan.icsHelp">The calendar file opens in Google Calendar, Outlook, and Apple Calendar.</p>
+          <div class="share-box">
+            <h3 data-i18n="share.h">Share this plan</h3>
+            <p class="fine" data-i18n="share.help">The link carries only the days you picked. Nothing is stored online.</p>
+            <button type="button" class="btn" id="share-copy" data-i18n="share.copy">Copy share link</button>
+            <label class="field share-field"><span data-i18n="share.linkLabel">Your share link</span>
+              <input type="text" id="share-link" readonly></label>
+          </div>
         </aside>
       </div>
     </section>
@@ -224,6 +244,50 @@
         <legend data-i18n="issue.pick">Pick an issue</legend>
       </fieldset>
       <div id="issue-result" class="issue-result" aria-live="polite"></div>
+    </section>
+
+    <!-- ===================== LEARN THE UN ===================== -->
+    <section id="view-learn" class="view" data-view="learn" aria-labelledby="learn-h" hidden>
+      <div class="view-head">
+        <h1 id="learn-h" tabindex="-1" data-i18n="learn.h1">The UN, in plain language</h1>
+        <p class="lede" data-i18n="learn.lede">Short cards on how the UN works. Read one aloud to open a meeting, or print the set for a welcome table.</p>
+        <div class="btn-row"><button type="button" class="btn btn-primary" id="learn-print" data-i18n="learn.print">Print the cards</button></div>
+      </div>
+      <div id="learn-cards" class="cards"></div>
+    </section>
+
+    <!-- ===================== CO-HOST ===================== -->
+    <section id="view-cohost" class="view" data-view="cohost" aria-labelledby="cohost-h" hidden>
+      <div class="view-head">
+        <h1 id="cohost-h" tabindex="-1" data-i18n="cohost.h1">Co-host with other chapters</h1>
+        <p class="lede" data-i18n="cohost.lede">Trade plan links with nearby chapters. Chapter Compass shows the days you picked in common, so co-hosting starts with a date everyone already wants.</p>
+      </div>
+      <div class="cohost-grid">
+        <div>
+          <form id="cohost-form" class="log-form" novalidate>
+            <h2 data-i18n="cohost.addH">Add a chapter's plan</h2>
+            <label class="field"><span data-i18n="cohost.paste">Paste a shared plan link</span>
+              <input type="text" name="link" autocomplete="off" spellcheck="false"></label>
+            <p class="form-error" id="cohost-error" role="alert"></p>
+            <button type="submit" class="btn btn-primary" data-i18n="cohost.add">Add this plan</button>
+          </form>
+          <h2 data-i18n="cohost.chaptersH">Chapters in this view</h2>
+          <p class="fine" id="cohost-year"></p>
+          <ul class="chapter-list" id="chapter-list"></ul>
+        </div>
+        <figure class="dial-wrap">
+          <div id="cohost-dial" class="dial"></div>
+          <figcaption class="fine" data-i18n="cohost.dialCaption">Bigger circles mean more chapters picked that day. The same days are listed below.</figcaption>
+        </figure>
+      </div>
+      <h2 data-i18n="cohost.overlapH">Days you have in common</h2>
+      <p class="plan-empty" id="overlap-empty" data-i18n="cohost.none">No shared days yet. Add another chapter's plan to compare.</p>
+      <ol class="overlap-list" id="overlap-list"></ol>
+      <div id="cohost-email-wrap" class="copy-block cohost-email" hidden>
+        <h3 id="cohost-email-l" data-i18n="cohost.emailH">Co-host email</h3>
+        <textarea id="cohost-email" rows="12" aria-labelledby="cohost-email-l"></textarea>
+        <button type="button" class="btn btn-small" data-copy="cohost-email" data-i18n="out.copy">Copy</button>
+      </div>
     </section>
 
     <!-- ===================== TRACK IMPACT ===================== -->
@@ -348,7 +412,12 @@
   <script src="data/issues.js"></script>
   <script src="data/access.js"></script>
   <script src="data/chapter.js"></script>
+  <script src="data/explainers.js"></script>
   <script src="assets/js/i18n.js"></script>
+  <script src="lang/fr.js"></script>
+  <script src="lang/ru.js"></script>
+  <script src="lang/zh.js"></script>
+  <script src="lang/ar.js"></script>
   <script src="assets/js/app.js"></script>
   <!-- GoatCounter: cookie-free, privacy-friendly visit counts. Forks: change or delete this line. -->
   <script data-goatcounter="https://meyeringn.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
