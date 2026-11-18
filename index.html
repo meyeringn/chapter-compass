@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter Compass: plan your UNA chapter's year</title>
+  <meta name="description" content="A free, open-source planning toolkit for UNA-USA chapter leaders: UN observances, accessible event planning, local-issue connections, and impact tracking. English and Spanish.">
+  <meta name="theme-color" content="#14283A">
+  <meta property="og:title" content="Chapter Compass">
+  <meta property="og:description" content="Plot your chapter's year. A free, accessible planning toolkit for UNA-USA chapter leaders.">
+  <meta property="og:image" content="og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <!-- Bunny Fonts: a privacy-friendly Google Fonts mirror (no cookies, no IP logging). Fallback stacks keep the page readable offline. -->
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=atkinson-hyperlegible-next:400,400i,700|big-shoulders-display:700,800&display=swap">
+  <link rel="stylesheet" href="assets/css/compass.css">
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">Skip to main content</a>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="#year">
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="3"/>
+          <path d="M24 7 L29 24 L24 41 L19 24 Z" fill="currentColor"/>
+          <path d="M24 7 L29 24 L19 24 Z" fill="#9E1468"/>
+        </svg>
+        <span class="brand-text">
+          <span class="brand-name">Chapter Compass</span>
+          <span class="brand-tag" data-i18n="brand.tag">A planning toolkit for UNA-USA chapter leaders</span>
+        </span>
+      </a>
+      <div class="settings">
+        <button type="button" class="setting" id="lang-toggle" lang="es">Español</button>
+        <button type="button" class="setting" id="print-toggle" aria-pressed="false" data-i18n="setting.largePrint">Large print</button>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Tools" data-i18n-attr="aria-label:nav.label">
+      <ul>
+        <li><a href="#year" data-route="year" data-i18n="nav.year">Plan the year</a></li>
+        <li><a href="#event" data-route="event" data-i18n="nav.event">Plan an event</a></li>
+        <li><a href="#issue" data-route="issue" data-i18n="nav.issue">Connect a local issue</a></li>
+        <li><a href="#impact" data-route="impact" data-i18n="nav.impact">Track impact</a></li>
+        <li><a href="#resources" data-route="resources" data-i18n="nav.resources">Resources</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- ===================== PLAN THE YEAR ===================== -->
+    <section id="view-year" class="view" data-view="year" aria-labelledby="year-h">
+      <div class="hero">
+        <div class="hero-copy">
+          <h1 id="year-h" tabindex="-1" data-i18n="year.h1">Plot your chapter's year.</h1>
+          <p class="lede" data-i18n="year.lede">Every UN international day and chapter deadline, on one dial. Pick the days that fit your members, and Chapter Compass turns them into a calendar, an event plan, and a report you won't dread in January.</p>
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" id="add-un-day" data-i18n="year.addUnDay">Add UN Day to our plan</button>
+            <label class="year-pick">
+              <span data-i18n="year.planningFor">Planning for</span>
+              <select id="plan-year"></select>
+            </label>
+          </div>
+          <p class="dial-key" aria-hidden="true">
+            <span class="key key-un" data-i18n="key.un">UN day</span>
+            <span class="key key-admin" data-i18n="key.admin">Chapter reminder</span>
+            <span class="key key-plan" data-i18n="key.plan">In our plan</span>
+            <span class="key key-today" data-i18n="key.today">Today</span>
+          </p>
+        </div>
+        <figure class="dial-wrap">
+          <div id="dial" class="dial"></div>
+          <figcaption class="visually-hidden" data-i18n="year.dialCaption">A circular year chart. The same days are listed below.</figcaption>
+        </figure>
+      </div>
+
+      <div class="year-grid">
+        <div class="year-list">
+          <div class="filters" role="group" aria-labelledby="filters-h">
+            <h2 id="filters-h" class="filters-h" data-i18n="year.listH">Days to plan around</h2>
+            <fieldset class="seg">
+              <legend class="visually-hidden" data-i18n="filter.show">Show</legend>
+              <label><input type="radio" name="type" value="all" checked> <span data-i18n="filter.all">Everything</span></label>
+              <label><input type="radio" name="type" value="un"> <span data-i18n="filter.un">UN days</span></label>
+              <label><input type="radio" name="type" value="admin"> <span data-i18n="filter.admin">Chapter reminders</span></label>
+            </fieldset>
+            <label class="sdg-filter">
+              <span data-i18n="filter.sdg">Goal</span>
+              <select id="sdg-filter"></select>
+            </label>
+          </div>
+          <p class="result-count" id="obs-count" aria-live="polite"></p>
+          <ol class="obs-list" id="obs-list"></ol>
+        </div>
+
+        <aside class="plan-panel" aria-labelledby="plan-h">
+          <h2 id="plan-h" tabindex="-1" data-i18n="plan.h">Our plan</h2>
+          <p class="plan-empty" id="plan-empty" data-i18n="plan.empty">Nothing here yet. Add a few days from the list, then come back for your calendar file.</p>
+          <ol class="plan-list" id="plan-list"></ol>
+          <div class="plan-actions">
+            <button type="button" class="btn btn-primary" id="plan-ics" data-i18n="plan.ics">Download calendar file</button>
+            <button type="button" class="btn" id="plan-print" data-i18n="plan.print">Print the plan</button>
+          </div>
+          <p class="fine" data-i18n="plan.icsHelp">The calendar file opens in Google Calendar, Outlook, and Apple Calendar.</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== PLAN AN EVENT ===================== -->
+    <section id="view-event" class="view" data-view="event" aria-labelledby="event-h" hidden>
+      <div class="view-head">
+        <h1 id="event-h" tabindex="-1" data-i18n="event.h1">Plan an event</h1>
+        <p class="lede" data-i18n="event.lede">Four steps from idea to a one-page brief, an access statement, and posts you can copy. Your draft saves in this browser as you type.</p>
+      </div>
+
+      <form id="event-form" class="steps" novalidate>
+        <fieldset class="step">
+          <legend><span class="step-n">1</span> <span data-i18n="event.s1">The basics</span></legend>
+          <div class="field-grid">
+            <label class="field span-2"><span data-i18n="event.title">Event name</span>
+              <input name="title" type="text" autocomplete="off" required></label>
+            <label class="field span-2"><span data-i18n="event.observance">Observance (optional)</span>
+              <select name="observance" id="event-observance"></select></label>
+            <label class="field"><span data-i18n="event.date">Date</span>
+              <input name="date" type="date"></label>
+            <label class="field"><span data-i18n="event.start">Starts</span>
+              <input name="start" type="time"></label>
+            <label class="field"><span data-i18n="event.end">Ends</span>
+              <input name="end" type="time"></label>
+            <label class="field"><span data-i18n="event.goal">Attendance goal</span>
+              <input name="goal" type="number" min="0" inputmode="numeric"></label>
+            <fieldset class="field span-2 inline-choices">
+              <legend data-i18n="event.format">Format</legend>
+              <label><input type="radio" name="format" value="inperson" checked> <span data-i18n="format.inperson">In person</span></label>
+              <label><input type="radio" name="format" value="virtual"> <span data-i18n="format.virtual">Virtual</span></label>
+              <label><input type="radio" name="format" value="hybrid"> <span data-i18n="format.hybrid">Hybrid</span></label>
+            </fieldset>
+            <label class="field"><span data-i18n="event.venue">Venue or link</span>
+              <input name="venue" type="text"></label>
+            <label class="field"><span data-i18n="event.address">Address</span>
+              <input name="address" type="text" autocomplete="street-address"></label>
+            <label class="field span-2"><span data-i18n="event.transit">Transit directions</span>
+              <input name="transit" type="text" data-i18n-attr="placeholder:event.transitPh"></label>
+            <label class="field span-2"><span data-i18n="event.partners">Co-hosts and partners</span>
+              <input name="partners" type="text" data-i18n-attr="placeholder:event.partnersPh"></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="step">
+          <legend><span class="step-n">2</span> <span data-i18n="event.s2">Access</span></legend>
+          <p class="step-note" data-i18n="event.s2note">Access is planned, not improvised. Check what's confirmed; anything unchecked shows up on your brief as a to-do.</p>
+          <div id="access-groups" class="access-groups"></div>
+          <div class="field-grid">
+            <label class="field"><span data-i18n="event.contact">Access contact (email or phone)</span>
+              <input name="contact" type="text"></label>
+            <label class="field"><span data-i18n="event.deadline">Request access by</span>
+              <input name="deadline" type="date"></label>
+          </div>
+          <p class="meter-line"><span data-i18n="event.confirmed">Confirmed</span>: <output id="access-count">0</output></p>
+        </fieldset>
+
+        <fieldset class="step">
+          <legend><span class="step-n">3</span> <span data-i18n="event.s3">Run of show</span></legend>
+          <table class="ros">
+            <caption class="visually-hidden" data-i18n="event.s3">Run of show</caption>
+            <thead><tr>
+              <th scope="col" data-i18n="ros.time">Time</th>
+              <th scope="col" data-i18n="ros.segment">What happens</th>
+              <th scope="col" data-i18n="ros.who">Who leads it</th>
+              <th scope="col"><span class="visually-hidden" data-i18n="ros.actions">Actions</span></th>
+            </tr></thead>
+            <tbody id="ros-body"></tbody>
+          </table>
+          <button type="button" class="btn" id="ros-add" data-i18n="ros.add">Add a row</button>
+        </fieldset>
+
+        <fieldset class="step">
+          <legend><span class="step-n">4</span> <span data-i18n="event.s4">Share it</span></legend>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary" data-i18n="event.build">Build the event brief</button>
+            <button type="button" class="btn" id="event-reset" data-i18n="event.reset">Start a new event</button>
+          </div>
+        </fieldset>
+      </form>
+
+      <div id="event-output" class="output" hidden tabindex="-1" aria-labelledby="output-h">
+        <h2 id="output-h" data-i18n="out.h">Your event kit</h2>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="brief-print" data-i18n="out.print">Print the brief</button>
+          <button type="button" class="btn" id="brief-ics" data-i18n="out.ics">Download calendar file</button>
+          <button type="button" class="btn" id="brief-log" data-i18n="out.log">Log this event</button>
+        </div>
+        <article id="brief" class="brief"></article>
+        <div class="copy-blocks">
+          <div class="copy-block">
+            <h3 id="out-access-l" data-i18n="out.access">Access statement</h3>
+            <textarea id="out-access" rows="6" readonly aria-labelledby="out-access-l"></textarea>
+            <button type="button" class="btn btn-small" data-copy="out-access" data-i18n="out.copy">Copy</button>
+          </div>
+          <div class="copy-block">
+            <h3 id="out-social-l" data-i18n="out.social">Social post</h3>
+            <textarea id="out-social" rows="6" readonly aria-labelledby="out-social-l"></textarea>
+            <button type="button" class="btn btn-small" data-copy="out-social" data-i18n="out.copy">Copy</button>
+          </div>
+          <div class="copy-block">
+            <h3 id="out-email-l" data-i18n="out.email">Email invitation</h3>
+            <textarea id="out-email" rows="10" readonly aria-labelledby="out-email-l"></textarea>
+            <button type="button" class="btn btn-small" data-copy="out-email" data-i18n="out.copy">Copy</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CONNECT AN ISSUE ===================== -->
+    <section id="view-issue" class="view" data-view="issue" aria-labelledby="issue-h" hidden>
+      <div class="view-head">
+        <h1 id="issue-h" tabindex="-1" data-i18n="issue.h1">Connect a local issue to the UN</h1>
+        <p class="lede" data-i18n="issue.lede">Members show up for what's happening on their street. Pick an issue and get the UN connection, discussion questions, and who to invite.</p>
+      </div>
+      <fieldset class="chips" id="issue-chips">
+        <legend data-i18n="issue.pick">Pick an issue</legend>
+      </fieldset>
+      <div id="issue-result" class="issue-result" aria-live="polite"></div>
+    </section>
+
+    <!-- ===================== TRACK IMPACT ===================== -->
+    <section id="view-impact" class="view" data-view="impact" aria-labelledby="impact-h" hidden>
+      <div class="view-head">
+        <h1 id="impact-h" tabindex="-1" data-i18n="impact.h1">Track impact</h1>
+        <p class="lede" data-i18n="impact.lede">Log each event when it happens. In January, your annual report writes its own first draft.</p>
+      </div>
+
+      <div class="impact-grid">
+        <form id="log-form" class="log-form" novalidate>
+          <h2 data-i18n="impact.addH">Log an event</h2>
+          <div class="field-grid">
+            <label class="field span-2"><span data-i18n="event.title">Event name</span>
+              <input name="title" type="text" required></label>
+            <label class="field"><span data-i18n="event.date">Date</span>
+              <input name="date" type="date" required></label>
+            <label class="field"><span data-i18n="impact.attendance">People who came</span>
+              <input name="attendance" type="number" min="0" inputmode="numeric"></label>
+            <label class="field"><span data-i18n="impact.newMembers">New members</span>
+              <input name="newMembers" type="number" min="0" inputmode="numeric"></label>
+            <label class="field"><span data-i18n="event.partners">Co-hosts and partners</span>
+              <input name="partners" type="text"></label>
+            <fieldset class="field span-2 sdg-checks">
+              <legend data-i18n="impact.sdgs">Goals it connected to</legend>
+              <div id="log-sdgs" class="sdg-grid"></div>
+            </fieldset>
+            <label class="field span-2"><span data-i18n="impact.notes">What happened (one or two sentences)</span>
+              <textarea name="notes" rows="3"></textarea></label>
+          </div>
+          <p class="form-error" id="log-error" role="alert"></p>
+          <button type="submit" class="btn btn-primary" data-i18n="impact.add">Add to the log</button>
+        </form>
+
+        <div class="log-side">
+          <h2 data-i18n="impact.totalsH">The year so far</h2>
+          <label class="year-pick"><span data-i18n="impact.reportYear">Report year</span>
+            <select id="report-year"></select></label>
+          <dl class="ledger" id="ledger"></dl>
+          <p class="fine" data-i18n="impact.privacy">Your log is saved only in this browser, on this device. Nothing is sent anywhere. Download a backup now and then.</p>
+          <div class="btn-row">
+            <button type="button" class="btn" id="log-csv" data-i18n="impact.csv">Download spreadsheet (CSV)</button>
+            <button type="button" class="btn" id="log-backup" data-i18n="impact.backup">Download backup</button>
+            <label class="btn file-btn"><span data-i18n="impact.restore">Restore a backup</span>
+              <input type="file" id="log-restore" accept="application/json,.json" class="visually-hidden"></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-table-wrap">
+        <table class="log-table">
+          <caption data-i18n="impact.tableCap">Logged events</caption>
+          <thead><tr>
+            <th scope="col" data-i18n="event.date">Date</th>
+            <th scope="col" data-i18n="event.title">Event name</th>
+            <th scope="col" data-i18n="impact.attendanceShort">Came</th>
+            <th scope="col" data-i18n="impact.newShort">New members</th>
+            <th scope="col" data-i18n="impact.sdgsShort">Goals</th>
+            <th scope="col"><span class="visually-hidden" data-i18n="ros.actions">Actions</span></th>
+          </tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+        <p class="plan-empty" id="log-empty" data-i18n="impact.empty">No events logged yet. Your first one goes in the form above.</p>
+      </div>
+
+      <div class="report">
+        <h2 id="report-l" data-i18n="impact.reportH">Annual report, first draft</h2>
+        <p class="fine" data-i18n="impact.reportHelp">Edit freely. Confirm what UNA-USA's annual report form asks for this year.</p>
+        <textarea id="report-draft" rows="12" aria-labelledby="report-l"></textarea>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" data-copy="report-draft" data-i18n="out.copy">Copy</button>
+          <button type="button" class="btn btn-danger" id="log-clear" data-i18n="impact.clear">Clear the log</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESOURCES ===================== -->
+    <section id="view-resources" class="view" data-view="resources" aria-labelledby="res-h" hidden>
+      <div class="view-head">
+        <h1 id="res-h" tabindex="-1" data-i18n="res.h1">Resources</h1>
+        <p class="lede" data-i18n="res.lede">Chapter Compass plans the work. These sources hold the facts, the official guidance, and the data.</p>
+      </div>
+      <div class="res-cols">
+        <div>
+          <h2 data-i18n="res.una">UNA-USA</h2>
+          <ul class="res-list">
+            <li><a href="https://unausa.org/">UNA-USA</a> <span data-i18n="res.unaHome">Membership, chapters, advocacy, and programs.</span></li>
+            <li><a href="https://issuu.com/unausa/docs/handbook_issuu.pptx">Community Chapter Handbook</a> <span data-i18n="res.handbook">Chapter requirements and good standing.</span></li>
+            <li><a href="https://unausa.org/fall-kick-off-checklist">Fall Semester Checklist</a> <span data-i18n="res.fall">Campus chapter deadlines for UN Day season.</span></li>
+          </ul>
+          <h2 data-i18n="res.un">The United Nations</h2>
+          <ul class="res-list">
+            <li><a href="https://www.un.org/en/observances/list-days-weeks">UN international days and weeks</a> <span data-i18n="res.days">The official list behind the year dial.</span></li>
+            <li><a href="https://sdgs.un.org/goals">The 17 Sustainable Development Goals</a> <span data-i18n="res.sdgs">Every goal, target, and indicator.</span></li>
+            <li><a href="https://www.un.org/en/about-us/un-charter">UN Charter</a> <span data-i18n="res.charter">Where "we the peoples" starts.</span></li>
+            <li><a href="https://www.ohchr.org/en/instruments-mechanisms/instruments/convention-rights-persons-disabilities">CRPD</a> <span data-i18n="res.crpd">The Convention on the Rights of Persons with Disabilities.</span></li>
+          </ul>
+        </div>
+        <div>
+          <h2 data-i18n="res.data">Data tools that pair well</h2>
+          <ul class="res-list">
+            <li><a href="https://sdg-tracker.org/">SDG Tracker</a> <span data-i18n="res.tracker">Our World in Data's progress charts for all 17 goals.</span></li>
+            <li><a href="https://open-sdg.org/">Open SDG</a> <span data-i18n="res.opensdg">Open-source platform for publishing local SDG data. It grew from code first written by the City of Philadelphia.</span></li>
+          </ul>
+          <h2 data-i18n="res.make">Make it yours</h2>
+          <p data-i18n="res.makeP">Chapter Compass is open source. Fork it, edit one file (data/chapter.js) with your chapter's name and partners, and publish it free on GitHub Pages.</p>
+          <p><a class="btn" href="https://github.com/meyeringn/chapter-compass" data-i18n="res.repo">See the code on GitHub</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p class="disclaimer" data-i18n="foot.disclaimer">Chapter Compass is an independent, open-source community tool. It is not an official product of UNA-USA, the UN Foundation, or the United Nations, and it doesn't speak for them.</p>
+    <p data-i18n="foot.made">Made in Philadelphia by Nico Meyering. MIT License. Data last verified November 2026.</p>
+  </footer>
+
+  <div id="status" class="visually-hidden" role="status" aria-live="polite"></div>
+
+  <script src="data/sdgs.js"></script>
+  <script src="data/observances.js"></script>
+  <script src="data/issues.js"></script>
+  <script src="data/access.js"></script>
+  <script src="data/chapter.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/app.js"></script>
+  <!-- GoatCounter: cookie-free, privacy-friendly visit counts. Forks: change or delete this line. -->
+  <script data-goatcounter="https://meyeringn.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
