@@ -33,7 +33,7 @@ Accessibility is usually an afterthought in event planning. Here it's step 2 of 
 
 ### Plan the year
 - A **year dial** showing every UN international day and chapter reminder, with a compass needle pointing at today.
-- Add days to your plan and the dial draws your route in magenta.
+- Add days to your plan and the dial draws your route in UN blue.
 - Filter by UN days, chapter reminders, or any of the 17 Sustainable Development Goals.
 - Download the plan as a **calendar file (.ics)** for Google Calendar, Outlook, or Apple Calendar, or print it.
 
@@ -59,7 +59,7 @@ Accessibility is usually an afterthought in event planning. Here it's step 2 of 
 ## Two Standout Features
 
 ### 1. The Year Dial
-Most planning tools show a list or a grid. Chapter Compass draws the chapter's year as an aeronautical chart: months around a compass ring, UN days as waypoints, chapter deadlines as diamonds, and your chosen days joined into a magenta flight route. The needle swings to today when the page loads. It's the same information as the list below it (the list is the accessible version), but it answers a question a list can't: *is our year lopsided?*
+Most planning tools show a list or a grid. Chapter Compass draws the chapter's year as an aeronautical chart: months around a compass ring, UN days as waypoints, chapter deadlines as diamonds, and your chosen days joined into a UN-blue flight route. The needle swings to today when the page loads. It's the same information as the list below it (the list is the accessible version), but it answers a question a list can't: *is our year lopsided?*
 
 ### 2. Access-First Event Briefs
 The event planner treats access as part of the plan, not a footnote. Every checked item becomes a sentence in a public access statement. Every unchecked item appears on the printed brief as **To confirm**, so the gap is visible to the whole planning team before the event, not to a Disabled attendee at the door.
@@ -101,7 +101,7 @@ Checks every date, both languages, every SDG number, and translation parity. It 
 chapter-compass/
 ├── index.html              # The whole app: five views, no framework
 ├── assets/
-│   ├── css/compass.css     # Design system (aeronautical-chart palette)
+│   ├── css/compass.css     # Design system (UN white and blue, chart layout)
 │   ├── js/app.js           # App logic: dial, planner, issues, log, routing
 │   ├── js/i18n.js          # Every interface string, English and Spanish
 │   └── favicon.svg
@@ -150,7 +150,7 @@ Chapter Compass grows directly out of the "Houston, We Have a Plan" workshop (Ch
 
 ## Accessibility
 
-Chapter Compass targets **WCAG 2.2 AA** and is built by a Disabled developer who uses it. Highlights: 18px base text in Atkinson Hyperlegible Next (designed by the Braille Institute for low-vision readers), a large-print mode, contrast of 6.2:1 or higher for all text, visible focus everywhere, every action reachable by keyboard, screen-reader status announcements, reduced-motion support, and print styles for every output. Full details and known limitations: [ACCESSIBILITY.md](ACCESSIBILITY.md).
+Chapter Compass targets **WCAG 2.2 AA** and is built by a Disabled developer who uses it. Highlights: a white and UN-blue palette tuned so every text color passes contrast, 18px base text in Atkinson Hyperlegible Next (designed by the Braille Institute for low-vision readers), a large-print mode, contrast of 6:1 or higher for all text, visible focus everywhere, every action reachable by keyboard, screen-reader status announcements, reduced-motion support, and print styles for every output. Full details and known limitations: [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
 Found a barrier? Please [open an issue](https://github.com/meyeringn/chapter-compass/issues). Access bugs are treated as the highest priority.
 

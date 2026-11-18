@@ -10,14 +10,14 @@ Chapter Compass is built by a Disabled developer for chapters that include Disab
 ### Seeing and reading
 - **Typeface:** Atkinson Hyperlegible Next, designed by the Braille Institute to improve character recognition for low-vision readers. Headings use Big Shoulders Display. Readable system fonts take over if web fonts don't load.
 - **Text size:** 18px base, and a **Large print** button in the header raises everything 25% and opens up line spacing. The setting is remembered.
-- **Contrast:** every text color meets 6.2:1 or better against its background (AA needs 4.5:1). Body text is 12.7:1 or better.
-- **Color is never the only signal.** Planned days have a magenta dashed edge *and* a checked box *and* the words "In our plan". Access items say "Confirmed" or "To confirm" in text.
+- **Contrast:** every text color meets 6:1 or better against its background (AA needs 4.5:1). Body text is 14:1 or better. Bright UN blue (#009EDB) is only 3:1 on white, so it is used for shapes and lines, never text; text-sized blue uses a deeper UN blue (#005B9A, 7.1:1).
+- **Color is never the only signal.** Planned days have a dashed UN-blue edge *and* a tinted background *and* a checked box *and* the words "In our plan". Access items say "Confirmed" or "To confirm" in text.
 - **Reduced motion:** the one animation (the compass needle) is turned off when your system asks for reduced motion.
 - **Windows High Contrast / forced colors:** pressed toggles and the route keep a visible outline.
 
 ### Keyboard and switch access
 - Every action works by keyboard. The first Tab press reveals a **Skip to main content** link.
-- Focus is always visible: a 3px magenta ring.
+- Focus is always visible: a 3px navy ring (white on the blue header).
 - Switching tools moves focus to the new page heading, so screen-reader and keyboard users know where they landed.
 - Buttons and controls are at least 44px tall.
 - Destructive actions (clearing a draft or the log) ask for a second press instead of a pop-up dialog.

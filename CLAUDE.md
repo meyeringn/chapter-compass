@@ -17,7 +17,7 @@ Static, no-framework planning toolkit for UNA-USA chapter leaders. Deployed on G
 - Identity-first disability language in app copy ("Disabled people", "personas Discapacitadas"). Keep official UN titles verbatim, even when they use person-first wording.
 - Chapter reminders (`type: "admin"`) need an https `source`. These dates change; never present them as official.
 - Never use UN or UNA-USA logos, emblems, or the SDG color wheel. Keep the "not an official product" disclaimer.
-- Design tokens live at the top of `assets/css/compass.css`; read `docs/DESIGN.md` before visual changes. Magenta means "in your plan" and nothing else. No gradients, no soft drop shadows, no Inter.
+- Design tokens live at the top of `assets/css/compass.css`; read `docs/DESIGN.md` before visual changes. UN blue (#009EDB) is for shapes and lines only, never text (3:1); text-sized blue is #005B9A. UN blue marks "in your plan". Red is only for to-dos, errors, and destructive actions. No gradients, no soft drop shadows, no Inter.
 - Accessibility is a requirement, not polish: keyboard path, visible focus, labels, 44px targets, contrast 4.5:1 or better. Check large print mode and a 390px-wide screen after any layout change.
 - Avoid em dashes in interface copy.
 
