@@ -28,7 +28,8 @@ cd chapter-compass
 # 3. Check your work (Node 18+, no installs needed)
 node tests/validate.mjs
 
-# 4. Open index.html in a browser and try your change in both languages
+# 4. Open index.html in a browser and try your change in English and Arabic
+#    (or run: npm run test:browser)
 
 # 5. Commit and open a pull request describing what changed and your source
 ```
