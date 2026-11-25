@@ -105,15 +105,16 @@ Edit one file, [`data/chapter.js`](data/chapter.js): your chapter's name, city, 
 
 ### Check Your Changes
 ```bash
-node tests/validate.mjs
+npm test               # or: node tests/validate.mjs (no installs needed)
+npm run test:browser   # needs: pip install playwright && python -m playwright install chromium
 ```
-Checks every date, both languages, every SDG number, and translation parity. It runs automatically on every push through GitHub Actions.
+`npm test` checks every date, all six languages, every SDG number, translation parity, every interface string the code uses, and house style (no em dashes, identity-first language). `npm run test:browser` opens the page offline and checks all seven views in all six languages at desktop and phone widths: no script errors, one heading per view, no sideways scrolling, right-to-left Arabic, share links (including a hostile one), calendar files, and backup restore. Both run automatically on every push and pull request through GitHub Actions, which also saves screenshots to look at.
 
 ## Repository Structure
 
 ```
 chapter-compass/
-├── index.html              # The whole app: five views, no framework
+├── index.html              # The whole app: seven views, no framework
 ├── assets/
 │   ├── css/compass.css     # Design system (UN white and blue, chart layout)
 │   ├── js/app.js           # App logic: dial, planner, issues, log, routing
@@ -134,8 +135,10 @@ chapter-compass/
 │   ├── FORKING.md          # Customizing for your chapter
 │   └── PROMPTS.md          # How this was vibe coded with Claude
 ├── tests/validate.mjs      # Data + translation check (node, no dependencies)
+├── tests/smoke.py          # Offline browser test: every view, every language, both widths
 ├── .claude/skills/         # Reusable Claude Code workflows for this repo
-├── .github/workflows/      # Runs the check on every push
+├── .claude/agents/         # An accessibility and translation reviewer for diffs
+├── .github/workflows/      # Runs both checks on every push and pull request
 ├── CLAUDE.md               # Project context for Claude Code sessions
 ├── ACCESSIBILITY.md
 ├── CONTRIBUTING.md

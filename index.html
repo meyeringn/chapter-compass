@@ -4,12 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chapter Compass: plan your UNA chapter's year</title>
-  <meta name="description" content="A free, open-source planning toolkit for UNA-USA chapter leaders: UN observances, accessible event planning, local-issue connections, and impact tracking. English and Spanish.">
+  <meta name="description" content="A free, open-source planning toolkit for UNA-USA chapter leaders: UN observances, accessible event planning, local-issue connections, and impact tracking. In all six official UN languages.">
+  <link rel="canonical" href="https://meyeringn.github.io/chapter-compass/">
   <meta name="theme-color" content="#005B9A">
   <meta property="og:title" content="Chapter Compass">
   <meta property="og:description" content="Plot your chapter's year. A free, accessible planning toolkit for UNA-USA chapter leaders.">
-  <meta property="og:image" content="og-image.png">
+  <meta property="og:url" content="https://meyeringn.github.io/chapter-compass/">
+  <!-- Share previews (LinkedIn, Facebook, Slack) need an absolute image address. -->
+  <meta property="og:image" content="https://meyeringn.github.io/chapter-compass/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Chapter Compass: Plot your chapter's year. A free, accessible planning toolkit for UNA-USA chapter leaders, in six UN languages, beside a circular year dial.">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Chapter Compass">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <!-- Bunny Fonts: a privacy-friendly Google Fonts mirror (no cookies, no IP logging). Fallback stacks keep the page readable offline. -->
@@ -56,6 +63,11 @@
   </header>
 
   <main id="main" tabindex="-1">
+    <noscript>
+      <div class="banner">
+        <p>Chapter Compass needs JavaScript to plan, save, and print. Nothing you type leaves your browser. <span lang="es">Chapter Compass necesita JavaScript. Nada de lo que escribes sale de tu navegador.</span></p>
+      </div>
+    </noscript>
     <div id="share-banner" class="banner" hidden>
       <p id="share-banner-text"></p>
       <div class="btn-row">
@@ -419,7 +431,9 @@
   <script src="lang/zh.js"></script>
   <script src="lang/ar.js"></script>
   <script src="assets/js/app.js"></script>
-  <!-- GoatCounter: cookie-free, privacy-friendly visit counts. Forks: change or delete this line. -->
+  <!-- GoatCounter: cookie-free, privacy-friendly visit counts. Forks: change or delete these two lines.
+       Count the page path only. Share links carry a chapter's plan in "?plan=", and that must never leave the browser. -->
+  <script>window.goatcounter = { path: function () { return location.pathname; } };</script>
   <script data-goatcounter="https://meyeringn.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>

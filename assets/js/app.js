@@ -9,6 +9,9 @@
   var CC = window.CC;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  // Lookup tables keyed by ids that can arrive from share links and backup files.
+  // No prototype, so an id like "constructor" or "__proto__" is never found by accident.
+  function dict() { return Object.create(null); }
 
   /* ---------- storage (never throws; works in private mode) ---------- */
   var store = {
@@ -124,13 +127,13 @@
   }
 
   var today = new Date();
-  var obsById = {};
+  var obsById = dict();
   CC.observances.forEach(function (o) { obsById[o.id] = o; });
-  var sdgByN = {};
+  var sdgByN = dict();
   CC.sdgs.forEach(function (g) { sdgByN[g.n] = g; });
 
   function sdgTag(n) {
-    return '<span class="tag" title="' + esc(L(sdgByN[n])) + '">' + esc(t("sdg.prefix")) + " " + n + "</span>";
+    return '<span class="tag" title="' + esc(L(sdgByN[n])) + '">' + esc(t("sdg.prefix") + " " + n) + "</span>";
   }
 
   /* ---------- downloads ---------- */
@@ -144,9 +147,21 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
   function icsEscape(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
+  // RFC 5545 asks for lines of at most 75 octets, continued on the next line after a space.
+  // Count UTF-8 bytes, so Arabic, Chinese, and Russian titles fold without splitting a character.
+  function icsFold(line) {
+    var out = [], cur = "", bytes = 0;
+    Array.from(line).forEach(function (ch) {
+      var n = unescape(encodeURIComponent(ch)).length;
+      if (bytes + n > 75) { out.push(cur); cur = " "; bytes = 1; }
+      cur += ch; bytes += n;
+    });
+    out.push(cur);
+    return out.join("\r\n");
+  }
   function icsWrap(lines) {
     return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Chapter Compass//EN", "CALSCALE:GREGORIAN"]
-      .concat(lines, ["END:VCALENDAR"]).join("\r\n");
+      .concat(lines, ["END:VCALENDAR"]).map(icsFold).join("\r\n") + "\r\n";
   }
   function stamp() { return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z"); }
 
@@ -155,7 +170,9 @@
    * ===================================================================== */
   var defaultYear = today.getMonth() >= 10 ? today.getFullYear() + 1 : today.getFullYear();
   var planYear = store.get("year", defaultYear);
+  if (!Number.isInteger(planYear) || planYear < 2000 || planYear > 2100) planYear = defaultYear;
   var plans = store.get("plan", {});
+  plans = cleanPlans(plans);
   var filters = { type: "all", sdg: "" };
 
   function planIds() { return plans[planYear] || []; }
@@ -184,7 +201,10 @@
   function renderYearSelect() {
     var sel = $("#plan-year");
     var y = today.getFullYear();
-    sel.innerHTML = [y, y + 1, y + 2].map(function (v) {
+    var years = [y, y + 1, y + 2];
+    // A plan saved for a year that has passed stays reachable instead of showing the wrong year.
+    if (years.indexOf(planYear) === -1) years.unshift(planYear);
+    sel.innerHTML = years.map(function (v) {
       return '<option value="' + v + '"' + (v === planYear ? " selected" : "") + ">" + v + "</option>";
     }).join("");
   }
@@ -335,10 +355,15 @@
     out.push("</svg>");
 
     // Center readout (HTML so it wraps and scales with large print).
-    var next = sortedObs().filter(function (o) {
-      var d = dateFor(o, today.getFullYear());
-      return d >= new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    })[0] || sortedObs()[0];
+    var todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    var nextYear = today.getFullYear();
+    var byThisYear = CC.observances.slice().sort(function (a, b) { return dateFor(a, nextYear) - dateFor(b, nextYear); });
+    var next = byThisYear.filter(function (o) { return dateFor(o, nextYear) >= todayStart; })[0];
+    if (!next) {
+      // Late December: nothing left this year, so the next stop is early next year.
+      nextYear += 1;
+      next = CC.observances.slice().sort(function (a, b) { return dateFor(a, nextYear) - dateFor(b, nextYear); })[0];
+    }
     if (counts) {
       var shared = Object.keys(counts).filter(function (k) { return counts[k].length > 1; }).length;
       out.push('<div class="dial-readout"><p class="readout-label">' + esc(t("cohost.overlapH")) + "</p>" +
@@ -350,7 +375,7 @@
     var stops = planned.length === 0 ? t("dial.nothing") : planned.length === 1 ? t("dial.stopsOne") : t("dial.stops", { n: planned.length });
     out.push('<div class="dial-readout"><p class="readout-label">' + esc(t("dial.next")) + "</p>" +
       '<p class="readout-name">' + esc(L(next.name)) + "</p>" +
-      '<p class="readout-date">' + esc(fmt(dateFor(next, today.getFullYear()), { month: "long", day: "numeric" })) + "</p>" +
+      '<p class="readout-date">' + esc(fmt(dateFor(next, nextYear), { month: "long", day: "numeric" })) + "</p>" +
       '<p class="readout-stops">' + esc(stops) + "</p></div>");
 
     $(target).innerHTML = out.join("");
@@ -387,7 +412,7 @@
    * ===================================================================== */
   var accessItems = [];
   CC.access.forEach(function (g) { g.items.forEach(function (i) { accessItems.push(i); }); });
-  var accessById = {};
+  var accessById = dict();
   accessItems.forEach(function (i) { accessById[i.id] = i; });
 
   function defaultRos() {
@@ -398,7 +423,19 @@
       { time: "19:30", seg: t("ros.d4"), who: "" }
     ];
   }
-  var draft = store.get("event", null) || { format: "inperson", access: [], ros: null };
+  // The event draft is read back from storage and backups; keep strings, known checklist ids, and well-formed rows.
+  var DRAFT_FIELDS = ["title", "observance", "date", "start", "end", "goal", "venue", "address", "transit", "partners", "contact", "deadline"];
+  function cleanDraft(d) {
+    d = d && typeof d === "object" ? d : {};
+    var out = { format: ["inperson", "virtual", "hybrid"].indexOf(d.format) !== -1 ? d.format : "inperson" };
+    DRAFT_FIELDS.forEach(function (k) { if (typeof d[k] === "string") out[k] = d[k].slice(0, 500); });
+    out.access = (Array.isArray(d.access) ? d.access : []).filter(function (id) { return typeof id === "string" && accessById[id]; });
+    out.ros = Array.isArray(d.ros) ? d.ros.filter(function (r) { return r && typeof r === "object"; }).map(function (r) {
+      return { time: typeof r.time === "string" ? r.time : "", seg: typeof r.seg === "string" ? r.seg : "", who: typeof r.who === "string" ? r.who : "" };
+    }) : null;
+    return out;
+  }
+  var draft = cleanDraft(store.get("event", null));
 
   function renderObsSelect() {
     var sel = $("#event-observance");
@@ -432,7 +469,7 @@
 
   function fillEventForm() {
     var f = $("#event-form");
-    ["title", "observance", "date", "start", "end", "goal", "venue", "address", "transit", "partners", "contact", "deadline"].forEach(function (k) {
+    DRAFT_FIELDS.forEach(function (k) {
       if (f.elements[k]) f.elements[k].value = draft[k] || "";
     });
     $$('input[name="format"]', f).forEach(function (r) { r.checked = r.value === (draft.format || "inperson"); });
@@ -443,7 +480,7 @@
 
   function readEventForm() {
     var f = $("#event-form");
-    ["title", "observance", "date", "start", "end", "goal", "venue", "address", "transit", "partners", "contact", "deadline"].forEach(function (k) {
+    DRAFT_FIELDS.forEach(function (k) {
       draft[k] = f.elements[k].value.trim();
     });
     var fm = $('input[name="format"]:checked', f);
@@ -573,7 +610,9 @@
     }
     lines.push("SUMMARY:" + icsEscape(draft.title || t("brief.untitled")), "LOCATION:" + icsEscape(whereText()),
       "DESCRIPTION:" + icsEscape(accessStatement()), "END:VEVENT");
-    download((draft.title || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".ics", icsWrap(lines), "text/calendar");
+    // Keep letters from any script; fall back to "event" if nothing usable is left.
+    var slug = (draft.title || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/, "");
+    download((slug || "event") + "-" + ymd(d) + ".ics", icsWrap(lines), "text/calendar");
   }
 
   function startEventFor(obsId, title) {
@@ -674,16 +713,25 @@
       var str = String(text || "").trim();
       var m = str.match(/[?&]plan=([A-Za-z0-9_-]+)/);
       var o = JSON.parse(b64d(m ? m[1] : str));
-      if (o.v !== 1 || !Array.isArray(o.d) || typeof o.y !== "number") return null;
-      return { n: String(o.n || "").slice(0, 80) || "?", y: o.y, d: o.d.filter(function (id) { return obsById[id]; }) };
+      return cleanPlan(o);
     } catch (e) { return null; }
+  }
+  // Plans come from links other people send and from this browser's storage, so check their shape.
+  function cleanPlan(o) {
+    if (!o || o.v !== 1 || !Array.isArray(o.d) || !Number.isInteger(o.y) || o.y < 2000 || o.y > 2100) return null;
+    var seen = dict();
+    var days = o.d.filter(function (id) {
+      if (typeof id !== "string" || !obsById[id] || seen[id]) return false;
+      seen[id] = true; return true;
+    });
+    return { v: 1, n: String(o.n || "").slice(0, 80) || "?", y: o.y, d: days };
   }
   function renderShareLink() {
     var box = $("#share-link");
     if (box) box.value = planIds().length ? shareUrl() : "";
   }
 
-  var others = store.get("others", []);
+  var others = (Array.isArray(store.get("others", [])) ? store.get("others", []) : []).map(cleanPlan).filter(Boolean);
   var incoming = null;
 
   function addOther(plan) {
@@ -695,7 +743,7 @@
   }
 
   function cohostCounts() {
-    var counts = {};
+    var counts = dict();
     function add(name, ids) { ids.forEach(function (id) { (counts[id] = counts[id] || []).push(name); }); }
     add(CC.chapter.name, planIds());
     others.forEach(function (o) { if (o.y === planYear) add(o.n, o.d); });
@@ -765,7 +813,25 @@
   /* =====================================================================
    * TRACK IMPACT
    * ===================================================================== */
-  var log = store.get("log", []);
+  // Log entries come from storage and from backup files people send each other. Keep only known fields.
+  function cleanEntry(e) {
+    if (!e || typeof e !== "object") return null;
+    var str = function (v, max) { return typeof v === "string" || typeof v === "number" ? String(v).slice(0, max) : ""; };
+    var num = function (v) { var n = parseInt(v, 10); return isFinite(n) && n >= 0 ? String(n) : ""; };
+    var date = /^\d{4}-\d{2}-\d{2}$/.test(e.date) ? e.date : "";
+    var title = str(e.title, 200).trim();
+    if (!title || !date) return null;
+    return {
+      id: str(e.id, 40).replace(/[^\w-]/g, "") || "e" + Math.random().toString(36).slice(2),
+      title: title, date: date, attendance: num(e.attendance), newMembers: num(e.newMembers),
+      partners: str(e.partners, 500), notes: str(e.notes, 2000),
+      sdgs: (Array.isArray(e.sdgs) ? e.sdgs : []).map(Number).filter(function (n, i, a) {
+        return Number.isInteger(n) && n >= 1 && n <= 17 && a.indexOf(n) === i;
+      })
+    };
+  }
+  function cleanLog(list) { return (Array.isArray(list) ? list : []).map(cleanEntry).filter(Boolean); }
+  var log = cleanLog(store.get("log", []));
   var reportYear = null;
 
   function renderLogSdgs() {
@@ -776,7 +842,7 @@
   }
 
   function yearsInLog() {
-    var ys = {};
+    var ys = dict();
     log.forEach(function (e) { if (e.date) ys[e.date.slice(0, 4)] = true; });
     ys[String(today.getFullYear())] = true;
     return Object.keys(ys).sort().reverse();
@@ -790,7 +856,7 @@
     var rows = log.slice().sort(function (a, b) { return (b.date || "").localeCompare(a.date || ""); });
     var inYear = rows.filter(function (e) { return (e.date || "").slice(0, 4) === reportYear; });
 
-    var people = 0, members = 0, goals = {}, partners = {};
+    var people = 0, members = 0, goals = dict(), partners = dict();
     inYear.forEach(function (e) {
       people += +e.attendance || 0; members += +e.newMembers || 0;
       (e.sdgs || []).forEach(function (n) { goals[n] = true; });
@@ -873,7 +939,7 @@
   }
   function exportBackup() {
     download("chapter-compass-backup-" + isoDate(today) + ".json",
-      JSON.stringify({ app: "chapter-compass", version: 1, saved: new Date().toISOString(), plan: plans, log: log, event: draft }, null, 2),
+      JSON.stringify({ app: "chapter-compass", version: 1, saved: new Date().toISOString(), plan: plans, log: log, event: draft, others: others }, null, 2),
       "application/json");
   }
   function restoreBackup(file) {
@@ -882,8 +948,11 @@
       try {
         var data = JSON.parse(reader.result);
         if (data.app !== "chapter-compass" || !Array.isArray(data.log)) throw new Error("not ours");
-        log = data.log; plans = data.plan || {}; if (data.event) draft = data.event;
-        store.set("log", log); store.set("plan", plans); store.set("event", draft);
+        log = cleanLog(data.log);
+        plans = cleanPlans(data.plan);
+        if (data.event && typeof data.event === "object" && !Array.isArray(data.event)) draft = cleanDraft(data.event);
+        if (Array.isArray(data.others)) others = data.others.map(cleanPlan).filter(Boolean);
+        store.set("log", log); store.set("plan", plans); store.set("event", draft); store.set("others", others);
         renderAll();
         say(t("impact.restored"));
       } catch (e) { say(t("impact.restoreFail")); }
@@ -891,6 +960,17 @@
     reader.readAsText(file);
   }
 
+  // { "2027": ["un-day", ...] }: keep real years and known days only.
+  function cleanPlans(p) {
+    var out = {};
+    if (!p || typeof p !== "object" || Array.isArray(p)) return out;
+    Object.keys(p).forEach(function (y) {
+      if (!/^\d{4}$/.test(y) || !Array.isArray(p[y])) return;
+      var c = cleanPlan({ v: 1, y: +y, d: p[y] });
+      if (c) out[y] = c.d;
+    });
+    return out;
+  }
   function prefillLogFromEvent() {
     readEventForm();
     var f = $("#log-form");
@@ -907,10 +987,20 @@
   function copyFrom(id) {
     var el = document.getElementById(id);
     var text = el.value;
-    function fallback() { el.focus(); el.select(); say(t("status.copyFail")); }
+    copyText(el, text, "status.copied");
+  }
+  // The Clipboard API needs https. On file:// and in older browsers, select the text and use
+  // the older copy command; only if that also fails, leave it selected and say so.
+  function copyText(el, text, okKey) {
+    function legacy() {
+      el.focus(); el.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      say(t(ok ? okKey : "status.copyFail"));
+    }
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(function () { say(t("status.copied")); }, fallback);
-    } else { fallback(); }
+      navigator.clipboard.writeText(text).then(function () { say(t(okKey)); }, legacy);
+    } else { legacy(); }
   }
 
   /* =====================================================================
@@ -953,9 +1043,7 @@
       if (!planIds().length) { say(t("share.emptyPlan")); return; }
       renderShareLink();
       var box = $("#share-link");
-      function fallback() { box.focus(); box.select(); say(t("status.copyFail")); }
-      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(box.value).then(function () { say(t("share.copied")); }, fallback);
-      else fallback();
+      copyText(box, box.value, "share.copied");
     });
     $("#share-accept").addEventListener("click", function () {
       var p = incoming; clearIncoming();

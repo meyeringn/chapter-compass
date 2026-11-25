@@ -130,6 +130,29 @@ const used = [...html.matchAll(/data-i18n="([^"]+)"/g)].map((m) => m[1])
   .concat([...html.matchAll(/data-i18n-attr="([^"]+)"/g)].flatMap((m) => m[1].split(";").map((p) => p.split(":")[1])));
 [...new Set(used)].filter((k) => !(k in CC.strings.en)).forEach((k) => bad(`index.html uses "${k}", which isn't in i18n.js`));
 
+// Keys used in app.js must exist too. A missing key shows its raw name on screen.
+const app = readFileSync(join(root, "assets/js/app.js"), "utf8");
+const appKeys = [...app.matchAll(/\bt\(\s*"([\w.-]+)"\s*[,)]/g), ...app.matchAll(/\?\s*"([a-z]+\.[\w.-]+)"\s*:\s*"([a-z]+\.[\w.-]+)"/g)]
+  .flatMap((m) => m.slice(1)).filter(Boolean);
+// Keys built at run time: t("format." + value) and t("out.short." + accessId).
+const dynamicKeys = ["inperson", "virtual", "hybrid"].map((f) => `format.${f}`)
+  .concat([...app.matchAll(/\["([\w-]+(?:",\s*"[\w-]+)*)"\]\.filter\(function \(id\) \{ return checked/g)].flatMap((m) => m[1].split(/",\s*"/).map((id) => `out.short.${id}`)));
+[...new Set(appKeys.concat(dynamicKeys))].filter((k) => !(k in CC.strings.en)).forEach((k) => bad(`assets/js/app.js uses "${k}", which isn't in i18n.js`));
+if (dynamicKeys.length < 4) bad("validate.mjs: couldn't find the social-post access list in app.js; update the dynamic key check");
+
+// House style in interface copy, in every language: no em dashes.
+for (const [code, dict] of Object.entries(CC.strings)) {
+  Object.entries(dict).forEach(([k, v]) => { if (String(v).includes("—")) bad(`${code}: "${k}" uses an em dash; rewrite the sentence`); });
+}
+// Identity-first language in English copy. Official names and UN titles stay verbatim.
+const OFFICIAL = /(Convention on the Rights of Persons with Disabilities|International Day of Persons with Disabilities|(Mayor's )?(Commission|Office) (on|for) People with Disabilities|Persons with Disabilities)/g;
+const english = Object.values(CC.strings.en).concat(CC.observances.flatMap((o) => [o.name.en, o.idea.en]), CC.explainers.flatMap((x) => [x.title.en, x.body.en, x.prompt.en]), CC.access.flatMap((g) => g.items.flatMap((i) => [i.en, i.says.en])));
+english.forEach((s) => {
+  const plain = String(s).replace(OFFICIAL, "");
+  for (const re of [/people with disabilit/i, /persons? with (a )?disabilit/i, /handicapped/i, /wheelchair[- ]bound/i, /special needs/i, /differently[- ]abled/i])
+    if (re.test(plain)) bad(`English copy should be identity-first ("Disabled people"): "${String(s).slice(0, 80)}"`);
+});
+
 if (problems.length) {
   console.error(`FAIL: ${problems.length} problem(s)\n- ` + problems.join("\n- "));
   process.exit(1);

@@ -45,8 +45,12 @@ The checklist in *Plan an event* draws on:
 
 It isn't a legal compliance tool. It's a planning list that makes gaps visible early.
 
+## Recently fixed
+- **November 2026:** on phone-width screens in English, Spanish, French, and Russian, the "Days to plan around" list was wider than the screen, so the page scrolled sideways and the right edge of each day was cut off (WCAG 1.4.10 Reflow). It now fits. A browser test checks every view in every language at 390px on every change.
+- **November 2026:** copying text on a page opened from your own computer (not the website) failed and asked you to copy by hand. It now copies in most browsers.
+
 ## Known limitations
-- Automated checks were run with a custom script (labels, names, headings, IDs, target sizes, keyboard flow). It hasn't been tested yet with every screen reader and browser pair. **Testing with JAWS, NVDA, VoiceOver, and TalkBack is the most valuable contribution you can make.**
+- Automated checks run on every change (`tests/smoke.py`: one heading per view, no sideways scrolling, right-to-left Arabic, skip link first) on top of an earlier custom script (labels, names, headings, IDs, target sizes, keyboard flow). It hasn't been tested yet with every screen reader and browser pair. **Testing with JAWS, NVDA, VoiceOver, and TalkBack is the most valuable contribution you can make.**
 - All five translations are AI-assisted drafts awaiting native-speaker review, ideally including Disabled speakers of each language. See [docs/LANGUAGES.md](docs/LANGUAGES.md) for the disability terms chosen in each language and why.
 - Data you enter is saved only in your browser. If you clear site data, it's gone, so download a backup.
 

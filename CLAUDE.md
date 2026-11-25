@@ -3,7 +3,8 @@
 Static, no-framework planning toolkit for UNA-USA chapter leaders. Deployed on GitHub Pages. Opening `index.html` from disk must keep working.
 
 ## Commands
-- Check data and translations: `node tests/validate.mjs` (must PASS before any commit)
+- Check data and translations: `npm test` or `node tests/validate.mjs` (must PASS before any commit). Also checks that every `t("key")` in app.js exists.
+- Browser test: `npm run test:browser` (needs `pip install playwright && python -m playwright install chromium`). Every view x six languages at 1280px and 390px, offline. `SCREENSHOTS=shots npm run test:browser` saves English and Arabic screenshots; look at them.
 - Preview: open `index.html` directly, or `python3 -m http.server` and visit localhost:8000
 
 ## Architecture
@@ -11,6 +12,8 @@ Static, no-framework planning toolkit for UNA-USA chapter leaders. Deployed on G
 - Shared plans travel in the URL as `?plan=<base64url JSON {v,n,y,d}>`; other chapters' plans are stored under `cc.others`. Explainer cards hold lasting facts only, never current events.
 - Data is in `data/*.js` as `window.CC.*` globals, NOT JSON. `fetch()` fails on `file://`, so don't convert them.
 - All saved state goes through the `store` helper in app.js (localStorage, wrapped in try/catch). Keys are prefixed `cc.`.
+- Share links, backup files, and storage are untrusted input. Run them through `cleanPlan`, `cleanPlans`, `cleanEntry`/`cleanLog`, and `cleanDraft`, and key lookup tables with `dict()` (no prototype), never `{}`. Escape everything rendered with `esc()`.
+- GoatCounter counts `location.pathname` only, because `?plan=` carries a chapter's plan. Keep it that way.
 - Nothing leaves the browser. Don't add APIs, trackers, or third-party scripts. GoatCounter (cookie-free) is the only exception.
 
 ## Rules
@@ -25,4 +28,4 @@ Static, no-framework planning toolkit for UNA-USA chapter leaders. Deployed on G
 - Avoid em dashes in interface copy.
 
 ## Verifying UI changes
-Take a screenshot of the changed view at 1280px and 390px, in English and Arabic (right to left), and compare against the intent. Run the validator. Tab through the changed view.
+Run `SCREENSHOTS=shots npm run test:browser` and look at the changed view at 1280px and 390px, in English and Arabic (right to left). Run the validator. Tab through the changed view. Then ask the `a11y-reviewer` agent to review the diff. Ship through a branch and pull request; a push to `main` goes live on GitHub Pages.
